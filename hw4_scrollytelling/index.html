@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <LINK href="styles/scrolly_style.css" rel="stylesheet" type="text/css">
+    <LINK href="styles/healthcare_style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+    <section class='filler'>
+
+        <p>
+            This example shows the same healthcare chart, but it dances by scrolling instead of automatically</a>.
+        </p>
+        <h2>Start Scrolling!</h2>
+
+    </section>
+
+    <section id='scrolly-overlay'>
+
+        <div class='scrolly'>
+
+            <!--  sticky graphic   -->
+            <figure class='sticky'>
+                <!-- put your chart stuff here -->
+                <!-- <div class='bar-outer'> -->
+                <div class='bar-inner'></div>
+                <!-- </div> -->
+                <svg class='svg-chart'> </svg>
+
+            </figure>
+
+            <!--  step text   -->
+            <article>
+                <!-- Pass values from here into js functions -->
+                <div class='step' data-width='10%' data-index='0' data-year='2009'>
+                    <p>Healthcare source by income in 2009</p>
+                </div>
+                <div class='step' data-width='90%' data-index='1' data-year="2020">
+                    <p>Healthcare source by income in 2020</p>
+                </div>
+                <!-- <div class='step' data-width='50%' data-index='2'>
+                    <p>Bar is 50%</p>
+                </div> -->
+            </article>
+
+        </div>
+
+    </section>
+
+    <section class='filler'>
+        <h2>End. Keep scrolling!</h2>
+
+        <div class="spacer"></div>
+        <p>See? The article continued as normal.</p>
+        <p>
+            Here's some more filler text. </p>
+        <p>
+            Additional filler text here. </p>
+        </br>
+        </br>
+    </section>
+</body>
+
+<!-- add your script blocks at the end -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://unpkg.com/enter-view@1.0.0/enter-view.min.js"></script>
+
+<!-- https://github.com/russellgoldenberg/enter-view -->
+
+<!-- Code with both healthcare chart and scrolly -->
+<script src="scripts/main.js"></script>
