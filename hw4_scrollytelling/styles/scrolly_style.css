@@ -8,9 +8,9 @@ svg {
     text-align: center;
 }
 
-.filler h2 {
+h2 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    font-size: 54px;
+    font-size: 24px;
 }
 
 .filler p {
@@ -79,27 +79,6 @@ svg {
     left: 0;
 }
 
-
-/* #scrolly-overlay .scrolly figure.sticky .bar-outer {
-    position: absolute;
-    top: 50%;
-    left: 5%;
-    transform: translateY(-50%);
-    width: 90%;
-    height: 4rem;
-    background-color: #fff;
-} */
-
-
-/* #scrolly-overlay .scrolly figure.sticky .bar-inner {
-    Starting position of inner bar is 10%
-    width: 10%;
-    height: 100%;
-    transition: width 1s ease-in-out;
-    position: absolute;
-    background-color: #daa520;
-} */
-
 #scrolly-overlay .scrolly figure.sticky .svg-chart {
     /* Starting position of inner bar is 10% */
     width: 100%;
@@ -111,4 +90,64 @@ svg {
 
 .spacer {
     height: 1500px;
+}
+
+
+/* HEALTHCARE STYLES ******************************/
+
+h1 {
+    margin: 0 auto;
+}
+
+.headline {
+    font-size: 30px;
+    margin-left: 30px;
+}
+
+.x .tick line {
+    stroke: rgba(0, 0, 0, .2);
+}
+
+.y .tick line {
+    stroke: rgba(0, 0, 0, .2);
+}
+
+.x .domain {
+    display: none;
+}
+
+.y .domain {
+    display: none;
+}
+
+.y .tick text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.x .tick text {
+    font-size: 12px;
+    fill: #333;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 2;
+}
+
+.legend-text {
+    font-size: 14px;
+    font-weight: 1;
+}
+
+.axis-label {
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.source {
+    max-width: 500px;
+    margin-top: 0px;
+    margin-left: 150px;
+    font-size: 14px;
 }
