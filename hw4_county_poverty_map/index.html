@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        .chart-container {
+            max-width: 1050px;
+            /* border: 3px solid red; */
+            margin: 0 auto;
+            /* auto centers the div */
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        
+        svg {
+            /* border: 2px solid purple; */
+            overflow: visible;
+        }
+        
+        h1 {
+            /* border: 2px solid green; */
+            margin-bottom: 30px;
+            margin-left: 285px;
+            font-size: 24px;
+        }
+        
+        .pop-up {
+            position: absolute;
+            border: 1px solid black;
+            border-radius: 1px;
+            line-height: 1.2;
+            width: 200px;
+            pointer-events: none;
+            background-color: white;
+            padding: 10px;
+            font-size: 12px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-style: italic;
+            font-weight: 200;
+        }
+    </style>
+    <!-- add your script blocks at the end -->
+
+</head>
+
+<body>
+    <div class="chart-container">
+        <h1 class="headline">
+            Number of children living in poverty by county
+        </h1>
+
+        <svg width="1050px" height="700px">
+
+        </svg>
+        <!-- Define popup as html element -->
+        <div class="pop-up">
+        </div>
+
+    </div>
+</body>
+
+
+<!-- we're using d3 version 6 (the latest version) for all out work -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<!-- load topojson script -->
+<script src="https://unpkg.com/topojson@3"></script>
+
+<script>
+    // //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+    Promise.all([ //waits for all the data to load, then when loaded will return it all in one array called res
+            d3.json('county_and_state_topo.json'),
+        ])
+        .then(ready)
+        .catch((err) => {
+            console.log(err);
+        });
+
+    function ready(res) {
+        let raw = res[0]
+
+        // Define name of each layer (This was set upon export)
+        let county = topojson.feature(raw, raw.objects.county);
+        let state = topojson.feature(raw, raw.objects.state);
+
+        let width = 1050;
+        let height = 500;
+
+        let svg = d3.select("body").select("svg");
+
+        // We have some invalid geometries. First, create a path to check the 
+        // error, filter, then create new path
+        let myProjection1 = d3.geoAlbersUsa()
+            .fitSize([width, height], county)
+
+        let path1 = d3.geoPath()
+            .projection(myProjection1)
+
+        county.features = county.features
+            .filter(d => !!path1.centroid(d)[0]);
+
+        let myProjection = d3.geoAlbersUsa()
+            .fitSize([width, height], county)
+
+        let path = d3.geoPath()
+            .projection(myProjection)
+
+        let states = svg
+            .selectAll(".states")
+            .data(state.features)
+            .join("path")
+            .attr("d", path)
+            .style("fill", "#eee")
+            .style("stroke", "#333")
+            .style("stroke-width", 1)
+            .style("pointer-events", "none")
+
+        let popup = d3.select(".pop-up");
+
+        let counties = svg
+            .selectAll(".counties")
+            .data(county.features)
+            .join("circle")
+            .attr("class", d => "p-" + d.properties.GEOID) // Give circles a class name.
+            .attr("r", d => Math.sqrt(d.properties.ppov_18 / 300))
+            .attr("cx", d => path.centroid(d)[0])
+            .attr("cy", d => path.centroid(d)[1])
+            .style("fill", "orange")
+            .style("fill-opacity", .8)
+            .style("stroke", "#333")
+            .style("stroke-width", .2)
+            .style("opacity", 1)
+
+        counties.on("mouseover", (event, d) => {
+
+            counties
+                .style("fill", "orange")
+                .style("fill-opacity", .8)
+                .style("stroke", "#333")
+                .style("stroke-width", .2)
+                .style("opacity", 1)
+
+            svg.select(".p-" + d.properties.GEOID)
+                .style("fill", "darkorange")
+                .style("stroke", "black")
+                .style("stroke-width", 1)
+                .style("fill-opacity", 1)
+                .raise()
+
+            // Construct the sentence that will popup
+            // Use fmt "County, State"
+            let lang = "There are " + d3.format(",")(d.properties.ppov_18) +
+                " children in poverty in " + d.properties.Geo_QName + "."
+
+            // First step: add the popup (defined above)
+            popup
+                .style("opacity", 1)
+                .style("left", (event.x - 100) + "px")
+                .style("top", (event.y - 100) + "px")
+                // Because the text is a <div>, it wraps easily
+                .html(lang)
+        })
+
+        counties.on("mouseout", (event, d) => {
+            counties
+                .style("fill", "orange")
+                .style("fill-opacity", .8)
+                .style("stroke", "#333")
+                .style("stroke-width", .2)
+                .style("opacity", 1)
+
+            popup
+                .style("opacity", 0)
+        })
+    }
+</script>
