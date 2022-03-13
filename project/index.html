@@ -380,6 +380,12 @@
             // .style("opacity", d => if_renew_then(d, 1, 0.5))
             // .attr("d", area)
 
+        svg1.append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .text("Cumulative US Generation")
+            .attr("fill", "black")
+
 
 
         function update_area(hour) {
