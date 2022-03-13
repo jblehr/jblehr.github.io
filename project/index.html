@@ -479,7 +479,7 @@
                 .style("stroke-width", 2)
 
             // Construct the sentence that will popup
-            let lang = "The " + d.properties.Plant_Name + " " + d.properties.PrimSource + " facility has a total capacity of " + d.properties.plant_capacity_mw + " MW."
+            let lang = "The " + d.properties.Plant_Name + " " + d.properties.PrimSource + " facility has a total capacity of " + d3.format(",.3r")(d.properties.plant_capacity_mw) + " MW."
 
             popup_plant_info
                 .style("opacity", 1)
@@ -652,8 +652,16 @@
             ba_points
                 .style("opacity", 0.2)
 
+
+            function create_phrase(d) {
+                if (d.properties.nt_ntrc < 0) {
+                    return "outflow of " + d3.format(",.3r")(Math.abs(d.properties.nt_ntrc))
+                } else {
+                    return "inflow of " + d3.format(",.3r")(Math.abs(d.properties.nt_ntrc))
+                }
+            }
             // Construct the sentence that will popup
-            let lang = d.properties.NAME + " had a net interchange of " + d.properties.nt_ntrc + " MW."
+            let lang = d.properties.NAME + " has a net " + create_phrase(d) + " MW."
 
             popup_intx
                 .style("opacity", 1)
