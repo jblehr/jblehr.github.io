@@ -32,6 +32,9 @@
         
         .command {
             text-align: center;
+            top: 0;
+            left: 0;
+            margin: 0 auto;
         }
         
         svg {
@@ -86,7 +89,7 @@
 
         <!-- TIME SLIDER HERE -->
         <div>
-            <p class="command">Select exact hour here</p>
+            <p class="command">Select exact hour here </p>
         </div>
         <div class="hour-slider">
             <div id="slider-step"></div>
@@ -117,7 +120,7 @@
 
 <script>
     // OVERALL SETUP
-    const HOUR_TRANS_TIME = 700;
+    const HOUR_TRANS_TIME = 900;
 
     // Define first headline
     let hed = d3.select(".hour_of_day")
@@ -762,6 +765,6 @@
             update_plants(hour_for_update)
             hour_for_update++;
         }
-        var hourly_timer = d3.interval(update_hourly, 500);
+        var hourly_timer = d3.interval(update_hourly, HOUR_TRANS_TIME);
     }
 </script>
