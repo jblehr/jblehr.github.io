@@ -1,53 +1,148 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
+
+<!-- Color pallete used -->
+<!-- https://flatuicolors.com/palette/au -->
 
 <!-- Load d3.js -->
 <script src="https://d3js.org/d3.v6.js"></script>
 <script src="https://unpkg.com/topojson@3"></script>
+<script src="https://unpkg.com/d3-simple-slider"></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
 
-<!-- Create an element where the map will take place -->
 
 <head>
-    <h1> A day in the life of the US electricity system </h1>
+    <meta charset="utf-8">
+    <style>
+        body {
+            max-width: 1050px;
+            margin: 0 auto;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        
+        .chart-container {
+            max-width: 1050px;
+            margin: 0 auto;
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+        
+        p {
+            font-family: 'Arial';
+            font-size: 15px;
+        }
+        
+        .command {
+            text-align: center;
+        }
+        
+        svg {
+            overflow: visible;
+        }
+        
+        .pop-up {
+            position: absolute;
+            border: 1px solid black;
+            border-radius: 1px;
+            line-height: 1.2;
+            width: 50;
+            pointer-events: none;
+            background-color: white;
+            padding: 10px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .hour-slider {
+            top: 0;
+            left: 0;
+            margin: 0 auto;
+        }
+        
+        .note {
+            font-size: 12px;
+            width: 400;
+        }
+        
+        .annotation {
+            font-size: 12px;
+            font-family: "arial";
+        }
+        
+        .hour_of_day {
+            font-size: 20px;
+        }
+    </style>
 </head>
 
 <body>
-    <p> Here's some lead in text to the overall graphic</p>
-    <p> Here's some more lead in text</p>
-    <div>
-        <h2> Total US Hourly Generation by Energy Source</h2>
-        <p> Here's lead in to the first graphic </p>
-        <p> Maybe more lead in to this one</p>
-        <svg id="stack_bar" width="1050" height="200"></svg>
+    <h1> A day in the life of the US electricity system </h1>
+    <p> </p>
+    <div class="chart-container">
+        <h2> Electricity generation varies substantially by time, location, and source</h2>
+        <p> During one day last summer - July 20th, 2021 - several thousand different generators contribute to meet US demand. Demand increases significantly from morning to evening, while a variety of energy sources ebb and flow throughout the day. <b>Wind</b>            and <b>solar</b> generation are intermittent sources; they depend on the weather. Many sources, like <b>hydroelectric</b> and <b>nuclear</b>, serve as baseload, and do not fluctuate much throughout the day. <b>Coal</b> and <b>natural gas</b>            include both baseload generators and "peaker" plants, which help meet spikes in demand or gaps in renewable supply. </p>
+        <h3 class="hour_of_day"></h3>
+        <svg id="dot_map" width="850" height="550"></svg>
+
+        <svg id="stack_bar" width="150" height="150"> </svg>
+
+        <!-- TIME SLIDER HERE -->
+        <div>
+            <p class="command">Select exact hour here</p>
+        </div>
+        <div class="hour-slider">
+            <div id="slider-step"></div>
+        </div>
+
+        <p class="note" width="500">Note: Hourly electricity data by source type (e.g., wind, solar) obtained at the regional (Balancing Authority) level from EIA. Plant-level generation is estimated by multiplying hour/source level generation by the proportion of prior year generation
+            in the region by the specific plant.</p>
     </div>
 
-    <div>
-        <h2> Hourly Generation by Generator</h2>
-        <p> Here's lead in to the second graphic </p>
-        <svg id="dot_map" width="1050" height="500"></svg>
+    <div class="chart-container">
+        <h2> The grid adapts to variation by trading electricity between different Balancing Authorities</h2>
+        <p> The US grid contains 68 different Balancing Authorities, or regional electricity grid operators. Each balancing authority must ensure that supply meets demand for all people within the region for a given hour. Interchange between regions allows
+            excess supply in one region to meet demand in another region. Depending on the hour, if the sun is shining, or the wind is blowing, a region might send and/or receive electricity from a dozen other regions.</p>
+        <h3>Electricity interchange during one hour (3 PM ET)</h3>
+        <p> <b>Mouseover</b> a single balancing authority (point) to view quantity and direction of electricity flow.</p>
+        <svg id="energy_flows" width="1050" height="600"></svg>
 
+        <p class="note" width="500">Note: Hourly interchange accessed from EIA's Electric Grid Monitor and aggregated. This does not include interchange with Canada or Mexico.</p>
     </div>
+    <div class="spacer">
+        <h2></h2>
+    </div>
+
+    <div class="pop-up">
+    </div>
+
 </body>
 
 <script>
+    // OVERALL SETUP
+    const HOUR_TRANS_TIME = 500;
+
+    // Define first headline
+    let hed = d3.select(".hour_of_day")
+    hed.html("Electricity generation by source at 1 AM ET")
+
+    ///// STACK BAR SETUP ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // set the dimensions and margins of the graph
-    const margin = {
-            top: 10,
-            right: 150,
-            bottom: 30,
-            left: 80
+    const margin1 = {
+            top: -150,
+            right: 50,
+            bottom: 150,
+            left: -120
         },
-        width1 = 900 - margin.left - margin.right,
-        height1 = 200 - margin.top - margin.bottom;
+        width1 = 150 - margin1.left - margin1.right,
+        height1 = 150 - margin1.top - margin1.bottom;
 
     // append the svg object to the body of the page
     const svg1 = d3.select("#stack_bar")
         .append("svg")
-        .attr("width", width1 + margin.left + margin.right)
-        .attr("height", height1 + margin.top + margin.bottom)
+        .attr("width", width1 + margin1.left + margin1.right)
+        .attr("height", height1 + margin1.top + margin1.bottom)
         .append("g")
         .attr("transform",
-            `translate(${margin.left}, ${margin.top})`);
+            `translate(${margin1.left}, ${margin1.top})`);
 
     // Stack the data: each group will be represented on top of each other
     let energy_sources = [
@@ -60,23 +155,132 @@
         "solar",
         "wind"
     ]
-    let energy_colors = [
-        "black",
-        "lightblue",
-        "brown",
-        "lightgreen",
-        "grey",
-        "purple",
-        "yellow",
-        "blue"
+    let source_labels = [
+        "Coal",
+        "Hydroelectric",
+        "Natural Gas",
+        "Nuclear",
+        "Other",
+        "Petroleum",
+        "Solar",
+        "Wind"
     ]
+    let energy_colors = [
+            "#686de0", //coal
+            "#22a6b3", //hydro
+            "#30336b", //gas
+            "#badc58", //nuclear
+            "#c7ecee", //other
+            "#535c68", //petrol
+            "#f9ca24", //solar
+            "#e056fd" //wind
+        ]
+        ////////////////// DOT MAP SETUP /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //Read the data
-    d3.csv("total_us_gen_summer.csv").then(function(data) {
+    // Features of the annotation
+    const annotations1 = [{
+        note: {
+            label: "Solar increases from zero to generate over a third of all power in early afternoon in Southern California."
+        },
+        x: 60,
+        y: 320,
+        dy: 50,
+        dx: -50
+    }, {
+        note: {
+            label: "Wind varies less predictably throughout the day, but supplies less energy during the middle of the day."
+        },
+        x: 300,
+        y: 400,
+        dy: 50,
+        dx: -50
+    }]
+
+    // Add annotation to the chart
+    const makeAnnotations1 = d3.annotation()
+        .annotations(annotations1)
+    d3.select("#dot_map")
+        .append("g")
+        .attr("class", "annotation")
+        .call(makeAnnotations1)
+
+    // set the dimensions and margins of the graph
+    const margin2 = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: -100
+        },
+        width2 = 800 - margin2.left - margin2.right,
+        height2 = 800 - margin2.top - margin2.bottom;
+
+    // append the svg object to the body of the page
+    const svg2 = d3.select("#dot_map")
+        .append("svg")
+        .attr("width", width2 + margin2.left + margin2.right)
+        .attr("height", height2 + margin2.top + margin2.bottom)
+        .append("g")
+        .attr("transform",
+            `translate(${margin2.left}, ${margin2.top})`);
+
+    // // Map and projection
+    let albers_us_projection = d3.geoAlbersUsa()
+
+    // A path generator
+    let geo_path = d3.geoPath()
+        .projection(albers_us_projection)
+
+    //////////////// ENERGY ARCS SETUP ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    let svg3 = d3.select("#energy_flows"),
+        width = +svg3.attr("width"),
+        height = +svg3.attr("height");
+
+    // Features of the annotation
+    const annotations2 = [{
+        note: {
+            label: "A complex network of interchanges manages the extensive hydroelectric resources in the Northwest."
+        },
+        x: 200,
+        y: 70,
+        dy: 20,
+        dx: -150
+    }, {
+        note: {
+            label: "ERCOT has little interchange, making it vulnerable to swings in demand or wind generation, the combination of which caused outages last year."
+        },
+        x: 450,
+        y: 415,
+        dy: 40,
+        dx: 100
+    }]
+
+    // Add annotation to the chart
+    const makeAnnotations2 = d3.annotation()
+        .annotations(annotations2)
+    d3.select("#energy_flows")
+        .append("g")
+        .attr("class", "annotation")
+        .call(makeAnnotations2)
+
+    /////////////////////////////////// LOAD THE DATA and do functions //////////////////////////////////////////////////////////////////////////////////
+    // load all layers
+    Promise.all([
+        d3.json("ba_points_with_itx.json"), //ba locations
+        d3.csv("seasonal_intx_geo.csv"),
+        d3.json("ba_boundaries.json"),
+        d3.json("states_L48.json"),
+        d3.csv("total_us_gen_summer.csv"),
+        d3.json("plant_by_hour_v4.json") // currently one date in july
+
+    ]).then(ready)
+
+    function ready(res) {
+
+        national_total = res[4]
 
         // group the data: one array for each value of the X axis.
         // data_filtered = data.filter(d => +d.hour <= HOUR);
-        var sumstat = d3.group(data, d => d.hour);
+        var sumstat = d3.group(national_total, d => d.hour);
 
         // Stack the data: each group will be represented on top of each other
         const mygroups = energy_sources // list of group names
@@ -91,12 +295,26 @@
 
         // Add X axis it is a date format
         const x = d3.scaleLinear()
-            .domain(d3.extent(data, d => +d.hour))
+            .domain(d3.extent(national_total, d => +d.hour))
             .range([0, width1]);
+
+        function int_to_time_text(d) {
+            if (d < 12) {
+                return d + " AM"
+            } else if (d == 12) {
+                return "12 PM"
+            } else if (d == 24) {
+                return "12 AM"
+            } else {
+                return d - 12 + " PM"
+            }
+        }
 
         svg1.append("g")
             .attr("transform", `translate(0, ${height1})`)
-            .call(d3.axisBottom(x).ticks());
+            .call(d3.axisBottom(x)
+                .ticks(7)
+                .tickFormat(d => int_to_time_text(d)));
 
         // Add Y axis
         const y = d3.scaleLinear()
@@ -104,8 +322,13 @@
             .domain([0, 700000])
             .range([height1, 0]);
 
+        y_labels = ["", "100", "200", "300", "400", "500", "600", "700,000 megawatthours"]
+
         svg1.append("g")
-            .call(d3.axisLeft(y).ticks(5));
+            .attr("transform", `translate(${width1},0 )`)
+            .call(d3.axisRight(y)
+                .ticks(5)
+                .tickFormat((d, i) => y_labels[i]))
 
         // color palette
         const color = d3.scaleOrdinal()
@@ -113,35 +336,36 @@
             .range(energy_colors)
 
         //Add legend
-        add_leg_entry = function(y1, fill, text) {
-            svg1.append("rect")
+        add_leg_entry = function(y1, x1, fill, text) {
+
+            svg1.append("circle")
                 .attr("class", "legend")
-                .attr("x", width1 + 10)
-                .attr("y", y1)
-                .attr("width", 10)
-                .attr("height", 10)
+                .attr("cx", x1)
+                .attr("cy", y1)
+                .attr("r", 7)
                 .attr("fill", fill)
                 .attr("stroke", "black")
 
-
             svg1.append("text")
                 .attr("class", "legend-text")
-                .attr("x", width1 + 30)
-                .attr("y", y1 + 10)
+                .attr("x", x1 + 20)
+                .attr("y", y1 + 5)
                 .text(text)
                 .attr("fill", "black")
         }
-        let start_pos = 10;
+        let start_y = -200;
+        let start_x = 70;
         for (let i = 1; i < energy_sources.length + 1; i++) {
             j = energy_sources.length - i;
-            add_leg_entry(start_pos, energy_colors[j], energy_sources[j])
-            start_pos += 20
+            add_leg_entry(start_y, start_x, energy_colors[j], source_labels[j])
+            start_y += 20
         }
 
         area = d3.area()
             .x(d => x(Math.min(d.data[0], HOUR)))
             .y0(d => y(d[0]))
             .y1(d => y(d[1]))
+
 
         // Show the areas
         let layers = svg1
@@ -150,14 +374,16 @@
             .join("path")
             .attr("class", d => "p-" + d.key)
             .style("fill", d => color(mygroups[d.key]))
+            // .style("opacity", d => if_renew_then(d, 1, 0.5))
             // .attr("d", area)
 
-        var hour = 0;
-        let func = function(e) {
-            hour++;
-            if (hour > 24) {
-                hour = 0;
-            }
+
+
+        function update_area(hour) {
+            hour_string = int_to_time_text(hour)
+            lang = "Electricity generation by source at " + hour_string + " ET"
+            hed.html(lang)
+
             area = d3.area()
                 .x(d => x(Math.min(d.data[0], hour)))
                 .y0(d => y(d[0]))
@@ -165,117 +391,377 @@
 
             layers
                 .transition()
-                .duration(700)
+                .duration(HOUR_TRANS_TIME)
                 .ease(d3.easeLinear)
                 .attr("d", area)
         }
-        var timer = d3.interval(func, 1500);
 
-    })
-</script>
+        function int_to_time_text(d) {
+            if (d < 12) {
+                return d + " AM"
+            } else if (d == 12) {
+                return "12 PM"
+            } else if (d == 24) {
+                return "12 AM"
+            } else {
+                return d - 12 + " PM"
+            }
+        }
 
-<script>
-    // The svg
-    let svg = d3.select("#dot_map"),
-        width2 = +svg.attr("width"),
-        height2 = +svg.attr("height");
+        ///// DOT MAP /////////////////////////////////////////////////////////////////
 
-    // Map and projection
-    let myprojection = d3.geoAlbersUsa()
-        //.scale(85)
-        //.translate([width / 2, height / 2 * 1.3])
+        let plant_location = res[5] // the json
+        let states = topojson.feature(res[3], res[3].objects.states)
 
-    // A path generator
-    let path = d3.geoPath()
-        .projection(myprojection)
-
-
-    // Load world shape AND list of connection
-    Promise.all([
-        d3.json("plant_by_hour_v3.json"), // currently one date in july
-        // d3.json("powerplants.json"), //ba locations
-        d3.json("states.json")
-    ]).then(ready)
-
-    function ready(res) {
-
-        let plant_location = res[0] // the json
-        let states = topojson.feature(res[1], res[1].objects.states)
-
-        let r_denom = 2.5;
-
+        let r_denom = 4.5;
 
         // states 
-        // TODO: Switch to regional boundaries
-        //TODO: highlight based on demand?
-        let borders = svg.append("g")
+        let state_borders_dot_map = svg2.append("g")
             .selectAll("path")
             .data(states.features)
             .join("path")
             .attr("fill", "lightgrey")
-            .attr("d", path)
+            .attr("d", geo_path)
             .style("stroke", "black")
             .style("stroke-width", 1)
             .style("opacity", 0.5)
 
-        // TODO: Map colors in more js way - see healthcare chart
+        function if_renew_then(d, return1, return2) {
+            if (d.properties.PrimSource == "solar" || d.properties.PrimSource == "wind") {
+                return return1
+            } else {
+                return return2
+            }
+        }
 
-        // color palette
-        const color = d3.scaleOrdinal()
-            .domain(energy_sources)
-            .range(energy_colors)
+        function apply_orig_plant_properties(plants) {
+            plants
+                .style("fill", d => color(d.properties.PrimSource))
+                .style("opacity", d => if_renew_then(d, 0.9, .6))
+                .style("stroke", d => if_renew_then(d, "black", "black"))
+                .style("stroke-width", d => if_renew_then(d, 0.9, 0.4))
+        }
 
         // BA centroids
-        let plants = svg
+        let plants = svg2
             .selectAll(".plants")
             .data(plant_location.features)
             .join("circle")
-            // .attr("class", d => "p-" + d.properties.BA_code) // Give circles a class name.
-            .attr("cx", function(d) {
-                return path.centroid(d)[0]
-            })
-            .attr("cy", function(d) {
-                return path.centroid(d)[1]
-            })
-            .attr("r", d => Math.sqrt(d.properties.hour_1) / r_denom)
-            .style("stroke", "grey")
-            .style("fill", d => color(d.properties.PrimSource))
-            .style("opacity", d => {
-                if (d.properties.PrimSource == "solar" || d.properties.PrimSource == "wind") {
-                    return 0.9
-                } else {
-                    return 0.4
-                }
-            })
-            .style("stroke", d => {
-                if (d.properties.PrimSource == "solar" || d.properties.PrimSource == "wind") {
-                    return "black"
-                } else {
-                    return "grey"
-                }
-            })
-            .style("stroke-width", d => {
-                if (d.properties.PrimSource == "solar" || d.properties.PrimSource == "wind") {
-                    return 0.9
-                } else {
-                    return 0.4
-                }
-            });
+            .attr("class", d => "plant-" + d.properties.Plant_Code) // Give circles a class name.
+            .attr("cx", d => geo_path.centroid(d)[0])
+            .attr("cy", d => geo_path.centroid(d)[1])
+            .attr("r", d => Math.sqrt(d.properties.hour_1 / r_denom))
 
-        let hour = 0;
-        let func = function(e) {
-            hour++;
-            if (hour > 24) {
-                hour = 1;
-            }
+        apply_orig_plant_properties(plants)
 
+        function update_plants(hour) {
             hour_string = `hour_${hour}`;
             plants
                 .transition()
-                .duration(700)
+                .duration(HOUR_TRANS_TIME)
                 .ease(d3.easeLinear)
-                .attr("r", d => Math.sqrt(d.properties[hour_string]) / r_denom);
+                .attr("r", d => Math.sqrt(d.properties[hour_string] / r_denom));
         }
-        var timer = d3.interval(func, 1500);
+
+        let popup_plant_info = d3.select(".pop-up");
+
+        // Mouseover plants to see more info
+        plants.on("mouseover", (event, d) => {
+
+            //select plant 
+            svg2.selectAll(".plant-" + d.properties.Plant_Code)
+                .style("fill", "#eb4d4b")
+                .style("fill-opacity", 1)
+                .style("stroke", "black")
+                .style("stroke-width", 2)
+
+            // Construct the sentence that will popup
+            let lang = "The " + d.properties.Plant_Name + " " + d.properties.PrimSource + " facility has a total capacity of " + d.properties.plant_capacity_mw + " MW."
+
+            popup_plant_info
+                .style("opacity", 1)
+                .style("left", (event.x - 50) + "px")
+                .style("top", (event.y - 40) + "px")
+                .html(lang)
+
+        })
+        plants.on("mouseout", (event, d) => {
+
+            apply_orig_plant_properties(plants)
+
+            popup_plant_info
+                .style("opacity", 0)
+
+        })
+
+        // <!-- ENERGY ARCS ---------------------------------------------- -->
+
+        const ARC_COLOR = "#4834d4";
+        const ARC_OPACTIY = 0.4
+        const REGION_COLOR = "#7ed6df"
+        const FLOWS_HOUR = "SUM_15"
+        const COLOR_IN = "#6ab04c";
+        const COLOR_OUT = "#f0932b";
+        const BA_POINTS_COLOR = "#130f40";
+
+        let ba_location = res[0] // the json
+        let interchange = res[1] // the csv
+        let control_areas = topojson.feature(res[2], res[2].objects.ba_boundaries)
+
+        seasons = ['SPR', 'SUM', 'FAL', 'WIN']
+
+        // Reformat the list of link. Note that columns in csv file are labeled
+        const link = []
+        interchange.forEach(function(row) {
+            source = [+row["lon1"], +row["lat1"]]
+            target = [+row["lon2"], +row["lat2"]]
+            value_array = []
+            for (let i = 0; i < seasons.length; i++) {
+                for (let j = 0; j < 24; j++) {
+                    value_array.push(row[seasons[i] + "_" + j])
+                }
+            }
+            topush = {
+                type: "LineString",
+                coordinates: [source, target],
+                value: value_array, // Add the value to weight the lines
+                ba1: [row.ba1]
+            }
+            link.push(topush)
+        })
+        let popup_intx = d3.select(".pop-up");
+
+        // States
+        let state_background = svg3.append("g")
+            .selectAll("path")
+            .data(states.features)
+            .join("path")
+            .attr("fill", "lightgrey")
+            .attr("fill-opacity", 0.3)
+            .attr("d", geo_path)
+            .style("stroke", "none")
+
+        // Control Area borders
+        let borders = svg3.append("g")
+            .selectAll("path")
+            .data(control_areas.features)
+            .join("path")
+            .attr("class", d => "border-" + d.properties.BA_code)
+            .attr("fill", "none")
+            .attr("d", geo_path)
+            .style("stroke", "black")
+            .style("stroke-width", 0.3)
+
+        // Energy arcs
+        let arcs = svg3.append("g")
+            .selectAll("myPath")
+            .data(link)
+            .join("path")
+            .attr("class", d => "arc-" + d.ba1)
+            .attr("d", d => geo_path(d))
+            .style("fill", "none")
+            .style("stroke-width", 3)
+            .style("stroke", ARC_COLOR)
+            .style("opacity", ARC_OPACTIY)
+
+        function if_inflow_then_x(d, hour, return1, return2) {
+            if (+d[hour] < 0) {
+                return return1
+            } else {
+                return return2
+            }
+        }
+
+        // point flows
+        let ba_itx_points = svg3
+            .selectAll(".itx_points")
+            .data(interchange)
+            .join("circle")
+            .attr("class", d => "itx-" + d.ba1)
+            .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
+                albers_us_projection([+d.lon2, +d.lat2])[0],
+                albers_us_projection([+d.lon1, +d.lat1])[0]))
+            .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
+                albers_us_projection([+d.lon2, +d.lat2])[1],
+                albers_us_projection([+d.lon1, +d.lat1])[1]))
+            .style("fill", "none")
+            .style("opacity", 0.8)
+            .attr("r", 5)
+
+        // // BA centroids
+        let ba_points = svg3
+            .selectAll(".ba_points")
+            .data(ba_location.features)
+            .join("circle")
+            .attr("class", d => "point-" + d.properties.BA_code) // Give circles a class name.
+            .attr("cx", d => geo_path.centroid(d)[0])
+            .attr("cy", d => geo_path.centroid(d)[1])
+            .attr("r", 7)
+            .style("stroke", "black")
+            .style("stroke-width", 0.2)
+            .style("fill", BA_POINTS_COLOR)
+            .style("fill-opacity", 0.8)
+
+        color_list = [COLOR_OUT, COLOR_IN]
+        txt_list = ["Net Outflow", "Net Inflow"]
+            //Add legend
+        add_leg_entry = function(y1, x1, fill, text) {
+            svg3.append("circle")
+                .attr("class", "legend")
+                .attr("cx", x1)
+                .attr("cy", y1)
+                .attr("r", 9)
+                .attr("fill", fill)
+                .attr("stroke", "black")
+
+            svg3.append("text")
+                .attr("class", "legend-text")
+                .attr("x", x1 + 20)
+                .attr("y", y1 + 5)
+                .text(text)
+                .attr("fill", "black")
+        }
+        let y_pos = 400;
+        let x_pos = 100;
+        for (let i = 0; i < txt_list.length; i++) {
+            add_leg_entry(y_pos, x_pos, color_list[i], txt_list[i])
+            y_pos += 40
+        }
+
+        svg3.append("rectangle")
+            .attr()
+
+        // Mouseover centroid to see in/outflow
+        ba_points.on("mouseover", (event, d) => {
+
+            borders
+                .style("stroke-width", 0.2)
+
+            //select borders
+            svg3.select(".border-" + d.properties.BA_code)
+                .style("fill", REGION_COLOR)
+                .style("fill-opacity", .3)
+                .style("stroke-width", 1)
+
+            arcs
+                .style("opacity", .1)
+
+            ba_points
+                .style("opacity", 0.2)
+
+            // Construct the sentence that will popup
+            let lang = d.properties.NAME + " had a net interchange of " + d.properties.nt_ntrc + " MW."
+
+            popup_intx
+                .style("opacity", 1)
+                .style("left", (event.x + 100) + "px")
+                .style("top", (event.y + 900) + "px")
+                .html(lang)
+
+            //select centroid
+            svg3.select(".point-" + d.properties.BA_code)
+                .style("fill", "grey")
+                .style("stroke", "black")
+                .style("opacity", 0.2)
+                .attr("r", 10)
+
+            //arcs
+            svg3.selectAll(".arc-" + d.properties.BA_code)
+                .style("opacity", 1)
+
+            //flows
+            svg3.selectAll(".itx-" + d.properties.BA_code)
+                .transition()
+                .duration(2000)
+                .ease(d3.easeLinear)
+                .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon1, +d.lat1])[0],
+                    albers_us_projection([+d.lon2, +d.lat2])[0]))
+                .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon1, +d.lat1])[1],
+                    albers_us_projection([+d.lon2, +d.lat2])[1]))
+                .style("stroke", "black")
+                .style("fill", d => if_inflow_then_x(d, FLOWS_HOUR, COLOR_IN, COLOR_OUT))
+                .style("opacity", 0.8)
+                .attr("r", d => Math.sqrt(Math.abs(+d[FLOWS_HOUR])) / 2)
+
+        })
+        ba_points.on("mouseout", (event, d) => {
+            arcs
+                .style("opacity", ARC_OPACTIY)
+                .style("stroke", ARC_COLOR)
+
+            borders
+                .style("fill", "none")
+                .style("stroke-width", 0.4)
+
+            // Move flows back to original locations
+            svg3.selectAll(".itx-" + d.properties.BA_code)
+                .transition()
+                .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon2, +d.lat2])[0],
+                    albers_us_projection([+d.lon1, +d.lat1])[0]))
+                .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon2, +d.lat2])[1],
+                    albers_us_projection([+d.lon1, +d.lat1])[1]))
+                .style("fill", "none")
+                .style("stroke", "none")
+                .attr("r", 5)
+
+            ba_points
+                .style("fill", BA_POINTS_COLOR)
+                .style("opacity", 1)
+                .attr("r", 7)
+
+            popup_intx
+                .style("opacity", 0)
+
+        })
+
+        // HOUR SLIDER ///////////////////////////////////////////////////////////////////////////////////
+        var data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+
+        var sliderStep = d3
+            .sliderBottom()
+            .min(1)
+            .max(24)
+            .width(350)
+            .height(50)
+            .tickFormat(data => int_to_time_text(data))
+            .ticks(7)
+            .step(1)
+            .default(1)
+            .on('onchange', val => {
+                hourly_timer.stop()
+                    // d3.select('p#value-step').text(d3.format('.2%')(val));
+                d3.select('p#value-step').text(int_to_time_text(val));
+                // Call the function we want to change here
+                update_area(val)
+                update_plants(val)
+
+            });
+
+        var gStep = d3
+            .select('div#slider-step')
+            .append('svg')
+            .attr('width', 300)
+            .attr('height', 50)
+            .append('g')
+            .attr('transform', 'translate(300,10)');
+
+        gStep.call(sliderStep);
+        // d3.select('p#value-step').text(int_to_time_text(sliderStep.value()));
+
+        let hour_for_update = 1;
+
+        let update_hourly = function(e) {
+            if (hour_for_update > 24) {
+                hour_for_update = 1;
+            }
+            update_area(hour_for_update)
+            update_plants(hour_for_update)
+            hour_for_update++;
+        }
+        var hourly_timer = d3.interval(update_hourly, 500);
     }
 </script>
