@@ -672,9 +672,9 @@
 
             function create_phrase(d) {
                 if (d.properties.nt_ntrc < 0) {
-                    return "outflow of " + d3.format(",.3r")(Math.abs(d.properties.nt_ntrc))
-                } else {
                     return "inflow of " + d3.format(",.3r")(Math.abs(d.properties.nt_ntrc))
+                } else {
+                    return "outflow of " + d3.format(",.3r")(Math.abs(d.properties.nt_ntrc))
                 }
             }
             // Construct the sentence that will popup
