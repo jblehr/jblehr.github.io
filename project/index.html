@@ -369,7 +369,6 @@
             .y0(d => y(d[0]))
             .y1(d => y(d[1]))
 
-
         // Show the areas
         let layers = svg1
             .selectAll("layers")
@@ -377,16 +376,12 @@
             .join("path")
             .attr("class", d => "p-" + d.key)
             .style("fill", d => color(mygroups[d.key]))
-            // .style("opacity", d => if_renew_then(d, 1, 0.5))
-            // .attr("d", area)
 
         svg1.append("text")
             .attr("x", 0)
             .attr("y", 0)
             .text("Cumulative US Generation")
             .attr("fill", "black")
-
-
 
         function update_area(hour) {
             hour_string = int_to_time_text(hour)
@@ -634,11 +629,23 @@
         let x_pos = 100;
         for (let i = 0; i < txt_list.length; i++) {
             add_leg_entry(y_pos, x_pos, color_list[i], txt_list[i])
-            y_pos += 40
+            y_pos += 30
         }
 
-        svg3.append("rectangle")
-            .attr()
+        svg3.append("rect")
+            .attr("x", 90)
+            .attr("y", 450)
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("fill", REGION_COLOR)
+            .attr("fill-opacity", 0.5)
+            .attr("stroke", "black")
+
+        svg3.append("text")
+            .attr("x", 120)
+            .attr("y", 465)
+            .text("Balancing Authority coverage area")
+            .attr("fill", "black")
 
         // Mouseover centroid to see in/outflow
         ba_points.on("mouseover", (event, d) => {
