@@ -88,9 +88,6 @@
         <svg id="stack_bar" width="150" height="150"> </svg>
 
         <!-- TIME SLIDER HERE -->
-        <div>
-            <p class="command">Select exact hour here </p>
-        </div>
         <div class="hour-slider">
             <div id="slider-step"></div>
         </div>
@@ -468,6 +465,13 @@
         }
 
         let popup_plant_info = d3.select(".pop-up");
+
+        // Add label for slider
+        svg2.append("text")
+            .attr("x", 485)
+            .attr("y", 530)
+            .text("Select exact hour here")
+            .attr("fill", "black")
 
         // Mouseover plants to see more info
         plants.on("mouseover", (event, d) => {
