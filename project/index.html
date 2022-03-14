@@ -94,7 +94,8 @@
     <p> </p>
     <div class="chart-container">
         <h2> Electricity generation varies substantially by time, location, and source</h2>
-        <p> During one day last summer - July 20th, 2021 - several thousand different generators contribute to meet US demand. Demand increases significantly from morning to evening, while a variety of energy sources ebb and flow throughout the day. <b>Wind</b>            and <b>solar</b> generation are intermittent sources; they depend on the weather. Many sources, like <b>hydroelectric</b> and <b>nuclear</b>, serve as baseload, and do not fluctuate much throughout the day. <b>Coal</b> and <b>natural gas</b>            include both baseload generators and "peaker" plants, which help meet spikes in demand or gaps in renewable supply. </p>
+        <p> During one day last summer - July 20th, 2021 - several thousand different generators contribute to meet US demand. Demand increases significantly from morning to evening, while a variety of energy sources ebb and flow throughout the day. One of
+            the main challenges to the integration of renewable sources is the variability of electricity supply. <b>Wind</b> and <b>solar</b> generation are intermittent sources; they depend on the weather. Sources like <b>hydroelectric</b> and <b>nuclear</b>            serve as baseload, and do not fluctuate much throughout the day. <b>Coal</b> and <b>natural gas</b> include both baseload generators and "peaker" plants, which help meet spikes in demand and gaps in renewable supply. </p>
         <h3 class="hour_of_day"></h3>
         <svg id="dot_map" width="850" height="550"></svg>
 
@@ -105,19 +106,19 @@
             <div id="slider-step"></div>
         </div>
 
-        <p class="note" width="500">Note: Hourly electricity data by source type (e.g., wind, solar) obtained at the regional (Balancing Authority) level from EIA. Plant-level generation is estimated by multiplying hour/source level generation by the proportion of prior year generation
-            in the region by the specific plant.</p>
+        <p class="note" width="500">Source: EIA form 923, EIA Hourly Electric Grid Monitor. "Hydroelectric" includes pumped storage. "Other" includes Biomass, Geothermal, and batteries. Hourly electricity data by source type (e.g., wind, solar) obtained at the regional (Balancing
+            Authority) and source (e.g., solar) level from EIA. Plant-level generation data is calcualted by multiplying hour/source level generation by the proportion of prior year generation in the region by the specific plant. </p>
     </div>
 
     <div class="chart-container">
         <h2> The grid adapts to variation by trading electricity between different Balancing Authorities</h2>
-        <p> The US grid contains 68 different Balancing Authorities, or regional electricity grid operators. Each balancing authority must ensure that supply meets demand for all people within the region for a given hour. Interchange between regions allows
+        <p> The US grid contains 68 different Balancing Authorities, or regional electricity grid operators. Each balancing authority ensures that supply meets demand for all consumers within the region for a given hour. Interchange between regions allows
             excess supply in one region to meet demand in another region. Depending on the hour, if the sun is shining, or the wind is blowing, a region might send and/or receive electricity from a dozen other regions.</p>
         <h3>Electricity interchange during one hour (3 PM ET)</h3>
         <p> <b>Mouseover</b> a single balancing authority (point) to view quantity and direction of electricity flow.</p>
         <svg id="energy_flows" width="1050" height="600"></svg>
 
-        <p class="note" width="500">Note: Hourly interchange accessed from EIA's Electric Grid Monitor and aggregated. This does not include interchange with Canada or Mexico.</p>
+        <p class="note" width="500">Source: Hourly interchange accessed from EIA's Hourly Electric Grid Monitor Interchange files. This does not include interchange with Canada or Mexico.</p>
     </div>
     <div class="spacer">
         <h2></h2>
@@ -494,8 +495,9 @@
 
             //select plant 
             svg2.selectAll(".plant-" + d.properties.Plant_Code)
-                .style("fill", "#eb4d4b")
-                .style("fill-opacity", 1)
+                // .style("fill", "#eb4d4b")
+                .style("fill", "black")
+                .style("opacity", 1)
                 .style("stroke", "black")
                 .style("stroke-width", 2)
 
@@ -627,7 +629,7 @@
             .style("fill-opacity", 0.8)
 
         color_list = [COLOR_OUT, COLOR_IN]
-        txt_list = ["Net Outflow", "Net Inflow"]
+        txt_list = ["Net outflow", "Net inflow"]
             //Add legend
         add_leg_entry = function(y1, x1, fill, text) {
             svg3.append("circle")
@@ -657,7 +659,7 @@
             .attr("y", 450)
             .attr("width", 20)
             .attr("height", 20)
-            .attr("fill", REGION_COLOR)
+            .attr("fill", "lightgrey")
             .attr("fill-opacity", 0.5)
             .attr("stroke", "black")
 
