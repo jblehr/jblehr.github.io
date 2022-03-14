@@ -188,9 +188,9 @@
         "Wind"
     ]
     let energy_colors = [
-            "#686de0", //coal
+            "#30336b", //coal
             "#22a6b3", //hydro
-            "#30336b", //gas
+            "#686de0", //gas
             "#badc58", //nuclear
             "#c7ecee", //other
             "#535c68", //petrol
@@ -436,7 +436,7 @@
         let plant_location = res[5] // the json
         let states = topojson.feature(res[3], res[3].objects.states)
 
-        let r_denom = 4.5;
+        let r_denom = 6;
 
         // states 
         let state_borders_dot_map = svg2.append("g")
@@ -460,12 +460,12 @@
         function apply_orig_plant_properties(plants) {
             plants
                 .style("fill", d => color(d.properties.PrimSource))
-                .style("opacity", d => if_renew_then(d, 0.9, .6))
+                .style("opacity", d => if_renew_then(d, .90, .65))
                 .style("stroke", d => if_renew_then(d, "black", "black"))
-                .style("stroke-width", d => if_renew_then(d, 0.9, 0.4))
+                .style("stroke-width", d => if_renew_then(d, 1, 0.6))
         }
 
-        // BA centroids
+        // Plants
         let plants = svg2
             .selectAll(".plants")
             .data(plant_location.features)
