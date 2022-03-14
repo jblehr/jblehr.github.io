@@ -557,7 +557,7 @@
         const ARC_COLOR = "#4834d4";
         const ARC_OPACTIY = 0.4
         const REGION_COLOR = "#7ed6df"
-        const FLOWS_HOUR = "SUM_15"
+        const FLOWS_HOUR = "SUM_14"
         const COLOR_IN = "#6ab04c";
         const COLOR_OUT = "#f0932b";
         const BA_POINTS_COLOR = "#130f40";
@@ -630,21 +630,29 @@
             }
         }
 
+        apply_orig_intx_properties = function() {
+            ba_itx_points
+                .transition()
+                .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon2, +d.lat2])[0],
+                    albers_us_projection([+d.lon1, +d.lat1])[0]))
+                .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
+                    albers_us_projection([+d.lon2, +d.lat2])[1],
+                    albers_us_projection([+d.lon1, +d.lat1])[1]))
+                .style("fill", "none")
+                .style("stroke", "none")
+                .style("opacity", 0.8)
+                .attr("r", 5)
+        }
+
         // point flows
         let ba_itx_points = svg3
             .selectAll(".itx_points")
             .data(interchange)
             .join("circle")
             .attr("class", d => "itx-" + d.ba1)
-            .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
-                albers_us_projection([+d.lon2, +d.lat2])[0],
-                albers_us_projection([+d.lon1, +d.lat1])[0]))
-            .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
-                albers_us_projection([+d.lon2, +d.lat2])[1],
-                albers_us_projection([+d.lon1, +d.lat1])[1]))
-            .style("fill", "none")
-            .style("opacity", 0.8)
-            .attr("r", 5)
+
+        apply_orig_intx_properties()
 
         // // BA centroids
         let ba_points = svg3
@@ -778,17 +786,7 @@
                     .style("stroke-width", 0.4)
 
                 // Move flows back to original locations
-                svg3.selectAll(".itx-" + d.properties.BA_code)
-                    .transition()
-                    .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
-                        albers_us_projection([+d.lon2, +d.lat2])[0],
-                        albers_us_projection([+d.lon1, +d.lat1])[0]))
-                    .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
-                        albers_us_projection([+d.lon2, +d.lat2])[1],
-                        albers_us_projection([+d.lon1, +d.lat1])[1]))
-                    .style("fill", "none")
-                    .style("stroke", "none")
-                    .attr("r", 5)
+                apply_orig_intx_properties()
 
                 ba_points
                     .style("fill", BA_POINTS_COLOR)
