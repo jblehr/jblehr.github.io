@@ -115,7 +115,7 @@
         <p> The US grid contains 68 different Balancing Authorities, or regional electricity grid operators. Each balancing authority ensures that supply meets demand for all consumers within the region for a given hour. Interchange between regions allows
             excess supply in one region to meet demand in another region. Depending on the hour, if the sun is shining, or the wind is blowing, a region might send and/or receive electricity from a dozen other regions.</p>
         <h3>Electricity interchange during one hour (3 PM ET)</h3>
-        <p> <b>Mouseover</b> a single balancing authority (point) to view quantity and direction of electricity flow.</p>
+        <p> <b>Mouseover</b> a single balancing authority to view quantity and direction of electricity flow during this hour</p>
         <svg id="energy_flows" width="1050" height="600"></svg>
 
         <p class="note" width="500">Source: Hourly interchange accessed from EIA's Hourly Electric Grid Monitor Interchange files. This does not include interchange with Canada or Mexico.</p>
@@ -255,19 +255,19 @@
     // Features of the annotation
     const annotations2 = [{
         note: {
-            label: "A complex network of interchanges manages the extensive hydroelectric resources in the Northwest."
+            label: "The Bonneville Power Admin. sends hydroeletric power to cities throughout the West during peak hours."
         },
         x: 200,
-        y: 70,
+        y: 100,
         dy: 20,
-        dx: -150
+        dx: -120
     }, {
         note: {
-            label: "ERCOT has little interchange, making it vulnerable to swings in demand or wind generation, the combination of which caused outages last year."
+            label: "ERCOT has low interchange, causing vulnerability to demand spikes or wind declines. This combination caused outages last year."
         },
         x: 450,
-        y: 415,
-        dy: 40,
+        y: 395,
+        dy: 70,
         dx: 100
     }]
 
