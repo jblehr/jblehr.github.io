@@ -674,7 +674,7 @@
             .text("Balancing Authority coverage area")
             .attr("fill", "black")
 
-        mouseover_event = function(d) {
+        mouseover_event = function(event, d) {
             borders
                 .style("stroke-width", 0.2)
 
@@ -703,8 +703,8 @@
 
             popup_intx
                 .style("opacity", 1)
-                .style("left", (event.x) + "px")
-                .style("top", (event.y) + "px")
+                .style("left", (event.x + 100) + "px")
+                .style("top", (event.y + 900) + "px")
                 .html(lang)
 
             //select centroid
@@ -733,7 +733,7 @@
                 .attr("r", d => Math.sqrt(Math.abs(+d[FLOWS_HOUR])) / 2)
         }
 
-        mouseout_event = function(d) {
+        mouseout_event = function(event, d) {
                 arcs
                     .style("opacity", ARC_OPACTIY)
                     .style("stroke", ARC_COLOR)
@@ -766,11 +766,11 @@
             // Mouseover centroid to see in/outflow
         ba_points.on("mouseover", (event, d) => {
 
-            mouseover_event(d)
+            mouseover_event(event, d)
         })
         ba_points.on("mouseout", (event, d) => {
 
-            mouseout_event(d)
+            mouseout_event(event, d)
         })
 
         // HOUR SLIDER ///////////////////////////////////////////////////////////////////////////////////
