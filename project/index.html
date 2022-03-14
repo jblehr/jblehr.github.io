@@ -54,6 +54,19 @@
             font-family: Arial, sans-serif;
         }
         
+        .pop-up-itx {
+            position: absolute;
+            border: 1px solid black;
+            border-radius: 1px;
+            line-height: 1.2;
+            width: 50;
+            pointer-events: none;
+            background-color: white;
+            padding: 10px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+        
         .hour-slider {
             top: 0;
             left: 0;
@@ -111,6 +124,9 @@
     </div>
 
     <div class="pop-up">
+    </div>
+
+    <div class="pop-up-itx">
     </div>
 
 </body>
@@ -537,7 +553,7 @@
             }
             link.push(topush)
         })
-        let popup_intx = d3.select(".pop-up");
+        let popup_intx = d3.select(".pop-up-itx");
 
         // States
         let state_background = svg3.append("g")
@@ -645,15 +661,20 @@
             .attr("fill-opacity", 0.5)
             .attr("stroke", "black")
 
+        svg3.append("circle")
+            .attr("cx", 100)
+            .attr("cy", 460)
+            .attr("r", 4)
+            .attr("fill", BA_POINTS_COLOR)
+            .attr("stroke", "black")
+
         svg3.append("text")
             .attr("x", 120)
             .attr("y", 465)
             .text("Balancing Authority coverage area")
             .attr("fill", "black")
 
-        // Mouseover centroid to see in/outflow
-        ba_points.on("mouseover", (event, d) => {
-
+        mouseover_event = function(d) {
             borders
                 .style("stroke-width", 0.2)
 
@@ -682,16 +703,14 @@
 
             popup_intx
                 .style("opacity", 1)
-                .style("left", (event.x + 100) + "px")
-                .style("top", (event.y + 900) + "px")
+                .style("left", (event.x) + "px")
+                .style("top", (event.y) + "px")
                 .html(lang)
 
             //select centroid
             svg3.select(".point-" + d.properties.BA_code)
-                .style("fill", "grey")
-                .style("stroke", "black")
-                .style("opacity", 0.2)
-                .attr("r", 10)
+                .style("opacity", .5)
+                .attr("r", 12)
 
             //arcs
             svg3.selectAll(".arc-" + d.properties.BA_code)
@@ -712,38 +731,46 @@
                 .style("fill", d => if_inflow_then_x(d, FLOWS_HOUR, COLOR_IN, COLOR_OUT))
                 .style("opacity", 0.8)
                 .attr("r", d => Math.sqrt(Math.abs(+d[FLOWS_HOUR])) / 2)
+        }
 
+        mouseout_event = function(d) {
+                arcs
+                    .style("opacity", ARC_OPACTIY)
+                    .style("stroke", ARC_COLOR)
+
+                borders
+                    .style("fill", "none")
+                    .style("stroke-width", 0.4)
+
+                // Move flows back to original locations
+                svg3.selectAll(".itx-" + d.properties.BA_code)
+                    .transition()
+                    .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
+                        albers_us_projection([+d.lon2, +d.lat2])[0],
+                        albers_us_projection([+d.lon1, +d.lat1])[0]))
+                    .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
+                        albers_us_projection([+d.lon2, +d.lat2])[1],
+                        albers_us_projection([+d.lon1, +d.lat1])[1]))
+                    .style("fill", "none")
+                    .style("stroke", "none")
+                    .attr("r", 5)
+
+                ba_points
+                    .style("fill", BA_POINTS_COLOR)
+                    .style("opacity", 1)
+                    .attr("r", 7)
+
+                popup_intx
+                    .style("opacity", 0)
+            }
+            // Mouseover centroid to see in/outflow
+        ba_points.on("mouseover", (event, d) => {
+
+            mouseover_event(d)
         })
         ba_points.on("mouseout", (event, d) => {
-            arcs
-                .style("opacity", ARC_OPACTIY)
-                .style("stroke", ARC_COLOR)
 
-            borders
-                .style("fill", "none")
-                .style("stroke-width", 0.4)
-
-            // Move flows back to original locations
-            svg3.selectAll(".itx-" + d.properties.BA_code)
-                .transition()
-                .attr("cx", d => if_inflow_then_x(d, FLOWS_HOUR,
-                    albers_us_projection([+d.lon2, +d.lat2])[0],
-                    albers_us_projection([+d.lon1, +d.lat1])[0]))
-                .attr("cy", d => if_inflow_then_x(d, FLOWS_HOUR,
-                    albers_us_projection([+d.lon2, +d.lat2])[1],
-                    albers_us_projection([+d.lon1, +d.lat1])[1]))
-                .style("fill", "none")
-                .style("stroke", "none")
-                .attr("r", 5)
-
-            ba_points
-                .style("fill", BA_POINTS_COLOR)
-                .style("opacity", 1)
-                .attr("r", 7)
-
-            popup_intx
-                .style("opacity", 0)
-
+            mouseout_event(d)
         })
 
         // HOUR SLIDER ///////////////////////////////////////////////////////////////////////////////////
@@ -761,12 +788,9 @@
             .default(1)
             .on('onchange', val => {
                 hourly_timer.stop()
-                    // d3.select('p#value-step').text(d3.format('.2%')(val));
                 d3.select('p#value-step').text(int_to_time_text(val));
-                // Call the function we want to change here
                 update_area(val)
                 update_plants(val)
-
             });
 
         var gStep = d3
@@ -778,10 +802,9 @@
             .attr('transform', 'translate(300,10)');
 
         gStep.call(sliderStep);
-        // d3.select('p#value-step').text(int_to_time_text(sliderStep.value()));
 
+        // Update hourly
         let hour_for_update = 1;
-
         let update_hourly = function(e) {
             if (hour_for_update > 24) {
                 hour_for_update = 1;
