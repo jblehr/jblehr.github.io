@@ -561,6 +561,8 @@
         const COLOR_IN = "#6ab04c";
         const COLOR_OUT = "#f0932b";
         const BA_POINTS_COLOR = "#130f40";
+        const R_DENOM_ARCS = r_denom;
+
 
         let ba_location = res[0] // the json
         let interchange = res[1] // the csv
@@ -642,7 +644,6 @@
                 .style("fill", "none")
                 .style("stroke", "none")
                 .style("opacity", 0.8)
-                .attr("r", 5)
         }
 
         // point flows
@@ -651,6 +652,8 @@
             .data(interchange)
             .join("circle")
             .attr("class", d => "itx-" + d.ba1)
+            .attr("r", d => Math.sqrt(Math.abs(+d[FLOWS_HOUR]) / R_DENOM_ARCS))
+
 
         apply_orig_intx_properties()
 
@@ -693,6 +696,40 @@
             add_leg_entry(y_pos, x_pos, color_list[i], txt_list[i])
             y_pos += 30
         }
+
+        r_list = [2000, 1000, 100]
+        txt_list = ["2,000 MW", "1,000 MW", "100 MW"]
+            //Add legend
+        add_leg_entry = function(y1, x1, r, text) {
+            svg3.append("circle")
+                .attr("class", "legend")
+                .attr("cx", x1)
+                .attr("cy", y1)
+                .attr("r", Math.sqrt(r / R_DENOM_ARCS))
+                .attr("fill", "grey")
+                .attr("opacity", 0.7)
+                .attr("stroke", "black")
+
+            svg3.append("text")
+                .attr("class", "legend-text")
+                .attr("x", x1 + 25)
+                .attr("y", y1 + 5)
+                .text(text)
+                .attr("fill", "black")
+        }
+        let y_pos2 = 380;
+        let x_pos2 = 820;
+        for (let i = 0; i < txt_list.length; i++) {
+            add_leg_entry(y_pos2, x_pos2, r_list[i], txt_list[i])
+            y_pos2 += 30
+        }
+
+        svg3.append("text")
+            // .attr("class", "legend-text")
+            .attr("x", 800)
+            .attr("y", 350)
+            .text("Net interchange")
+            .attr("fill", "black")
 
         svg3.append("rect")
             .attr("x", 90)
@@ -747,7 +784,9 @@
             popup_intx
                 .style("opacity", 1)
                 .style("left", (event.x + 100) + "px")
+                // .style("left", albers_us_projection(event.x) + "px")
                 .style("top", (event.y + 900) + "px")
+                // .style("top", albers_us_projection(event.y) + "px")
                 .html(lang)
 
             //select centroid
@@ -773,7 +812,6 @@
                 .style("stroke", "black")
                 .style("fill", d => if_inflow_then_x(d, FLOWS_HOUR, COLOR_IN, COLOR_OUT))
                 .style("opacity", 0.8)
-                .attr("r", d => Math.sqrt(Math.abs(+d[FLOWS_HOUR])) / 2)
         }
 
         mouseout_event = function(event, d) {
