@@ -1,5 +1,19 @@
 <!DOCTYPE html>
 
+<!-- TODOS
+1. Add text to first chart
+2. Add dynamic hour to first chart
+3. Get categories (other, etc) fixed
+
+4. center first two svgs
+5. Change description of hydro as peaking too 
+6. Fix location of pop-up on both maps
+7. Add more info to pop-ups on both maps 
+Get sizing of maps larger!
+-->
+
+
+
 <!-- Color pallete used -->
 <!-- https://flatuicolors.com/palette/au -->
 
@@ -28,6 +42,19 @@
         p {
             font-family: 'Arial';
             font-size: 15px;
+        }
+        
+        h1 {
+            text-align: center;
+        }
+        
+        h2 {
+            text-align: center;
+        }
+        
+        h3 {
+            text-align: center;
+            font-size: 20px;
         }
         
         .command {
@@ -67,12 +94,6 @@
             font-family: Arial, sans-serif;
         }
         
-        .hour-slider {
-            top: 0;
-            left: 0;
-            margin: 0 auto;
-        }
-        
         .note {
             font-size: 12px;
             width: 400;
@@ -81,10 +102,6 @@
         .annotation {
             font-size: 12px;
             font-family: "arial";
-        }
-        
-        .hour_of_day {
-            font-size: 20px;
         }
         
         .legend-text {
@@ -98,19 +115,19 @@
     <h1> A day in the life of the US electricity system </h1>
     <p> </p>
     <div class="chart-container">
-        <h2> Electricity generation varies substantially by time, location, and source</h2>
-        <p> During one day last summer - July 20th, 2021 - several thousand different generators contribute to meet US demand. Demand increases significantly from morning to evening, while a variety of energy sources ebb and flow throughout the day. One of
-            the main challenges to the integration of renewable sources is the variability of electricity supply. <b>Wind</b> and <b>solar</b> generation are intermittent sources; they depend on the weather. Sources like <b>hydroelectric</b> and <b>nuclear</b>            serve as baseload, and do not fluctuate much throughout the day. <b>Coal</b> and <b>natural gas</b> include both baseload generators and "peaker" plants, which help meet spikes in demand and gaps in renewable supply. </p>
-        <h3 class="hour_of_day"></h3>
-        <svg id="dot_map" width="850" height="550"></svg>
+        <h2> Electricity demand varies throughout the day</h2>
+        <p>During one day last summer - July 20th, 2021, the demand for energy, or load followed the typical summer load curve, with a much higher peak in the late afternoon.</p>
+        <h3 class="hour_of_day_area"></h3>
+        <svg id="stack_bar" width="1050" height="400"> </svg>
 
-        <svg id="stack_bar" width="150" height="150"> </svg>
-
-        <!-- TIME SLIDER HERE -->
-        <div class="hour-slider">
-            <div id="slider-step"></div>
-        </div>
-
+    </div>
+    <div class="chart-container">
+        <h2> Electricity supply varies substantially by time, location, and source throughout the day</h2>
+        <p> As demand changes, so does supply. Several thousand different generators contribute to meet US demand. One of the main challenges to the integration of renewable sources is the variability of electricity supply. <b>Wind</b> and <b>solar</b> generation
+            are intermittent sources; they depend on the weather. Sources like <b>coal</b> and <b>nuclear</b> serve as baseload, and do not fluctuate much throughout the day. <b>Hydroelectric</b> and <b>natural gas</b> include both baseload generators
+            and "peaker" plants, which help meet spikes in demand and gaps in renewable supply. </p>
+        <h3 class="hour_of_day_dots"></h3>
+        <svg id="dot_map" width="1050" height="600"></svg>
         <p class="note" width="500">Source: EIA form 923, EIA Hourly Electric Grid Monitor. "Hydroelectric" includes pumped storage. "Other" includes Biomass, Geothermal, and batteries. Hourly electricity data by source type (e.g., wind, solar) obtained at the regional (Balancing
             Authority) and source (e.g., solar) level from EIA. Plant-level generation data is calcualted by multiplying hour/source level generation by the proportion of prior year generation in the region by the specific plant. </p>
     </div>
@@ -139,23 +156,27 @@
 
 <script>
     // OVERALL SETUP
-    const HOUR_TRANS_TIME = 1000;
+    const HOUR_TRANS_TIME = 1200;
 
-    // Define first headline
-    let hed = d3.select(".hour_of_day")
-    hed.html("Electricity generation by source at 1 AM ET")
+    // Define first headline for dots
+    let hed_dots = d3.select(".hour_of_day_dots")
+    hed_dots.html("Electricity generation by source at 1 AM ET")
+
+    // Define first headline for area
+    let hed_area = d3.select(".hour_of_day_area")
+    hed_area.html("Cumulative US generation at 1 AM ET")
 
     ///// STACK BAR SETUP ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // set the dimensions and margins of the graph
     const margin1 = {
-            top: -150,
-            right: 50,
-            bottom: 150,
-            left: -120
+            top: 0,
+            right: 200,
+            bottom: 0,
+            left: 200
         },
-        width1 = 150 - margin1.left - margin1.right,
-        height1 = 150 - margin1.top - margin1.bottom;
+        width1 = 1050 - margin1.left - margin1.right,
+        height1 = 400 - margin1.top - margin1.bottom;
 
     // append the svg object to the body of the page
     const svg1 = d3.select("#stack_bar")
@@ -168,34 +189,43 @@
 
     // Stack the data: each group will be represented on top of each other
     let energy_sources = [
-        "coal",
-        "hydroelectric",
-        "natural_gas",
-        "nuclear",
         "other",
         "petroleum",
-        "solar",
-        "wind"
+        "coal",
+        "natural_gas",
+        "nuclear",
+        "hydroelectric",
+        "wind",
+        "solar"
     ]
     let source_labels = [
-        "Coal",
-        "Hydroelectric",
-        "Natural Gas",
-        "Nuclear",
-        "Other",
-        "Petroleum",
-        "Solar",
-        "Wind"
+            "Other",
+            "Coal",
+            "Natural Gas",
+            "Nuclear",
+            "Hydroelectric",
+            "Wind",
+            "Solar"
+        ]
+        // Only add labels for other, even though includes petrol
+    let source_colors = [
+        "#535c68", //other
+        "#30336b", //coal
+        "#686de0", //gas
+        "#badc58", //nuclear
+        "#22a6b3", //hydro
+        "#e056fd", //wind
+        "#f9ca24" //solar
     ]
     let energy_colors = [
+            "#535c68", //other
+            "#535c68", //petrol
             "#30336b", //coal
-            "#22a6b3", //hydro
             "#686de0", //gas
             "#badc58", //nuclear
-            "#c7ecee", //other
-            "#535c68", //petrol
-            "#f9ca24", //solar
-            "#e056fd" //wind
+            "#22a6b3", //hydro
+            "#e056fd", //wind
+            "#f9ca24" //solar
         ]
         ////////////////// DOT MAP SETUP /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -204,16 +234,16 @@
         note: {
             label: "Solar increases from zero to generate a significant proportion of all power in early afternoon in Southern California."
         },
-        x: 60,
-        y: 320,
+        x: 140,
+        y: 280,
         dy: -100,
         dx: -80
     }, {
         note: {
             label: "Wind varies less predictably throughout the day, but supplies less energy during the middle of the day."
         },
-        x: 300,
-        y: 400,
+        x: 400,
+        y: 390,
         dy: 50,
         dx: -50
     }]
@@ -231,10 +261,10 @@
             top: 0,
             right: 0,
             bottom: 0,
-            left: -100
+            left: 0
         },
-        width2 = 800 - margin2.left - margin2.right,
-        height2 = 800 - margin2.top - margin2.bottom;
+        width2 = 1050 - margin2.left - margin2.right,
+        height2 = 600 - margin2.top - margin2.bottom;
 
     // append the svg object to the body of the page
     const svg2 = d3.select("#dot_map")
@@ -293,7 +323,6 @@
         d3.json("states_L48.json"),
         d3.csv("total_us_gen_summer.csv"),
         d3.json("plant_by_hour_v4.json") // currently one date in july
-
     ]).then(ready)
 
     function ready(res) {
@@ -301,7 +330,6 @@
         national_total = res[4]
 
         // group the data: one array for each value of the X axis.
-        // data_filtered = data.filter(d => +d.hour <= HOUR);
         var sumstat = d3.group(national_total, d => d.hour);
 
         // Stack the data: each group will be represented on top of each other
@@ -340,7 +368,6 @@
 
         // Add Y axis
         const y = d3.scaleLinear()
-            // .domain([0, Math.max(data, d => +d.gen_mw) * 1.2])
             .domain([0, 700000])
             .range([height1, 0]);
 
@@ -358,9 +385,9 @@
             .range(energy_colors)
 
         //Add legend
-        add_leg_entry = function(y1, x1, fill, text) {
+        add_leg_entry = function(svg_no, y1, x1, fill, text) {
 
-            svg1.append("circle")
+            svg_no.append("circle")
                 .attr("class", "legend")
                 .attr("cx", x1)
                 .attr("cy", y1)
@@ -368,18 +395,18 @@
                 .attr("fill", fill)
                 .attr("stroke", "black")
 
-            svg1.append("text")
+                svg_no.append("text")
                 .attr("class", "legend-text")
                 .attr("x", x1 + 20)
                 .attr("y", y1 + 5)
                 .text(text)
                 .attr("fill", "black")
         }
-        let start_y = -200;
-        let start_x = 70;
-        for (let i = 1; i < energy_sources.length + 1; i++) {
-            j = energy_sources.length - i;
-            add_leg_entry(start_y, start_x, energy_colors[j], source_labels[j])
+        let start_y = 0;
+        let start_x = width1 + 150;
+        for (let i = 1; i < source_colors.length + 1; i++) {
+            j = source_colors.length - i;
+            add_leg_entry(svg1, start_y, start_x, source_colors[j], source_labels[j])
             start_y += 20
         }
 
@@ -396,16 +423,14 @@
             .attr("class", d => "p-" + d.key)
             .style("fill", d => color(mygroups[d.key]))
 
-        svg1.append("text")
-            .attr("x", 0)
-            .attr("y", 0)
-            .text("Cumulative US Generation")
-            .attr("fill", "black")
-
         function update_area(hour) {
             hour_string = int_to_time_text(hour)
+
             lang = "Electricity generation by source at " + hour_string + " ET"
-            hed.html(lang)
+            hed_dots.html(lang)
+
+            lang = "Cumulative US generation at " + hour_string + " ET"
+            hed_area.html(lang)
 
             area = d3.area()
                 .x(d => x(Math.min(d.data[0], hour)))
@@ -438,6 +463,14 @@
 
         let r_denom = 6;
 
+        start_y = 100;
+        start_x = width2 - 120;
+        for (let i = 1; i < source_colors.length + 1; i++) {
+            j = source_colors.length - i;
+            add_leg_entry(svg2, start_y, start_x, source_colors[j], source_labels[j])
+            start_y += 20
+        }
+
         // states 
         let state_borders_dot_map = svg2.append("g")
             .selectAll("path")
@@ -460,7 +493,7 @@
         function apply_orig_plant_properties(plants) {
             plants
                 .style("fill", d => color(d.properties.PrimSource))
-                .style("opacity", d => if_renew_then(d, .90, .65))
+                .style("opacity", d => if_renew_then(d, .90, .40))
                 .style("stroke", d => if_renew_then(d, "black", "black"))
                 .style("stroke-width", d => if_renew_then(d, 1, 0.6))
         }
@@ -509,37 +542,28 @@
                 .attr("fill", "black")
         }
         let y_pos1 = 380;
-        let x_pos1 = 100;
+        let x_pos1 = 900;
         for (let i = 0; i < txt_list.length; i++) {
             add_leg_entry(y_pos1, x_pos1, r_list[i], txt_list[i])
             y_pos1 += 30
         }
-
-        // Add label for slider
-        svg2.append("text")
-            .attr("x", 485)
-            .attr("y", 530)
-            .text("Select exact hour here")
-            .attr("fill", "black")
 
         // Mouseover plants to see more info
         plants.on("mouseover", (event, d) => {
 
             //select plant 
             svg2.selectAll(".plant-" + d.properties.Plant_Code)
-                // .style("fill", "#eb4d4b")
-                .style("fill", "black")
                 .style("opacity", 1)
                 .style("stroke", "black")
-                .style("stroke-width", 2)
+                .style("stroke-width", 4)
 
             // Construct the sentence that will popup
             let lang = "The " + d.properties.Plant_Name + " " + d.properties.PrimSource + " facility has a total capacity of " + d3.format(",.3r")(d.properties.plant_capacity_mw) + " MW."
 
             popup_plant_info
                 .style("opacity", 1)
-                .style("left", (event.x - 50) + "px")
-                .style("top", (event.y - 40) + "px")
+                .style("left", (event.pageX + 20) + "px")
+                .style("top", (event.pageY - 40) + "px")
                 .html(lang)
 
         })
@@ -783,10 +807,8 @@
 
             popup_intx
                 .style("opacity", 1)
-                .style("left", (event.x + 100) + "px")
-                // .style("left", albers_us_projection(event.x) + "px")
-                .style("top", (event.y + 900) + "px")
-                // .style("top", albers_us_projection(event.y) + "px")
+                .style("left", (event.pageX + 20) + "px")
+                .style("top", (event.pageY - 40) + "px")
                 .html(lang)
 
             //select centroid
@@ -815,64 +837,33 @@
         }
 
         mouseout_event = function(event, d) {
-                arcs
-                    .style("opacity", ARC_OPACTIY)
-                    .style("stroke", ARC_COLOR)
+            arcs
+                .style("opacity", ARC_OPACTIY)
+                .style("stroke", ARC_COLOR)
 
-                borders
-                    .style("fill", "none")
-                    .style("stroke-width", 0.4)
+            borders
+                .style("fill", "none")
+                .style("stroke-width", 0.4)
 
-                // Move flows back to original locations
-                apply_orig_intx_properties()
+            // Move flows back to original locations
+            apply_orig_intx_properties()
 
-                ba_points
-                    .style("fill", BA_POINTS_COLOR)
-                    .style("opacity", 1)
-                    .attr("r", 7)
+            ba_points
+                .style("fill", BA_POINTS_COLOR)
+                .style("opacity", 1)
+                .attr("r", 7)
 
-                popup_intx
-                    .style("opacity", 0)
-            }
-            // Mouseover centroid to see in/outflow
+            popup_intx
+                .style("opacity", 0)
+        }
+
+        // Mouseover centroid to see in/outflow
         ba_points.on("mouseover", (event, d) => {
-
             mouseover_event(event, d)
         })
         ba_points.on("mouseout", (event, d) => {
-
             mouseout_event(event, d)
         })
-
-        // HOUR SLIDER ///////////////////////////////////////////////////////////////////////////////////
-        var data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
-
-        var sliderStep = d3
-            .sliderBottom()
-            .min(1)
-            .max(24)
-            .width(350)
-            .height(50)
-            .tickFormat(data => int_to_time_text(data))
-            .ticks(7)
-            .step(1)
-            .default(1)
-            .on('onchange', val => {
-                hourly_timer.stop()
-                d3.select('p#value-step').text(int_to_time_text(val));
-                update_area(val)
-                update_plants(val)
-            });
-
-        var gStep = d3
-            .select('div#slider-step')
-            .append('svg')
-            .attr('width', 300)
-            .attr('height', 50)
-            .append('g')
-            .attr('transform', 'translate(300,10)');
-
-        gStep.call(sliderStep);
 
         // Update hourly
         let hour_for_update = 1;
